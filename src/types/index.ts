@@ -4,13 +4,8 @@ export interface Product {
   pros: string[];
   cons: string[];
   alibabaSearchKeywords: string[];
-  imageUrl: string;
 }
 
 export interface ProductResponse {
   products: Product[];
-}
-
-export interface EnrichedProductResponse {
-    products: Product[];
 }

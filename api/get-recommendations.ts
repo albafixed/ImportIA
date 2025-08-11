@@ -1,11 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Product, ProductResponse, EnrichedProductResponse } from '../src/types';
-
-// Exporta la configuración de la función para Vercel
-export const config = {
-    runtime: 'edge',
-    maxDuration: 60, // Aumentado para permitir las múltiples llamadas
-};
+import type { ProductResponse } from '../src/types';
 
 // Esta función es manejada por Vercel como una función serverless.
 export default async function handler(request: Request) {
@@ -62,8 +56,7 @@ export default async function handler(request: Request) {
         
         const prompt = `Analiza oportunidades en el nicho de mercado: '${niche}'.`;
 
-        // Paso 1: Obtener las recomendaciones de productos (sin imagen)
-        const textResponse = await ai.models.generateContent({
+        const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
             config: {
@@ -74,7 +67,7 @@ export default async function handler(request: Request) {
             },
         });
 
-        let jsonText = textResponse.text.trim();
+        let jsonText = response.text.trim();
         if (jsonText.startsWith('```json')) {
             jsonText = jsonText.substring(7, jsonText.length - 3).trim();
         }
@@ -88,36 +81,8 @@ export default async function handler(request: Request) {
         if (!parsedResponse.products || !Array.isArray(parsedResponse.products) || parsedResponse.products.length === 0) {
            throw new Error('La IA no devolvió productos en el formato esperado.');
         }
-
-        // Paso 2: Enriquecer cada producto con una URL de imagen en paralelo
-        const enrichedProducts = await Promise.all(
-            parsedResponse.products.map(async (product) => {
-                try {
-                    const imageSearchPrompt = `Find a high-quality, generic e-commerce style image URL for a '${product.productName}'. The image should be suitable for a product listing. Return ONLY the direct image URL as plain text, and nothing else.`;
-                    const imageResponse = await ai.models.generateContent({
-                        model: "gemini-2.5-flash",
-                        contents: imageSearchPrompt,
-                        config: {
-                           tools: [{googleSearch: {}}],
-                           temperature: 0.1,
-                        }
-                    });
-
-                    // Asignamos la URL o un placeholder si falla
-                    const imageUrl = imageResponse.text.trim().startsWith('http') ? imageResponse.text.trim() : 'https://via.placeholder.com/300x300.png?text=No+Image';
-                    return { ...product, imageUrl };
-
-                } catch (imgError) {
-                    console.error(`Error al buscar imagen para ${product.productName}:`, imgError);
-                    // Devolver el producto con una imagen de marcador de posición en caso de error
-                    return { ...product, imageUrl: 'https://via.placeholder.com/300x300.png?text=Error+Finding+Image' };
-                }
-            })
-        );
         
-        const finalResponse: EnrichedProductResponse = { products: enrichedProducts };
-
-        return new Response(JSON.stringify(finalResponse), {
+        return new Response(JSON.stringify(parsedResponse), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });

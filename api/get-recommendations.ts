@@ -74,15 +74,24 @@ export default async function handler(request: Request) {
         }
 
         let jsonText = text.trim();
-        if (jsonText.startsWith('```json')) {
-            jsonText = jsonText.substring(7, jsonText.length - 3).trim();
-        }
         
-        if (!jsonText) {
-            throw new Error('La IA no generó una respuesta de texto válida.');
+        const startIndex = jsonText.indexOf('{');
+        const endIndex = jsonText.lastIndexOf('}');
+
+        if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+            console.error("No se encontró un objeto JSON válido en la respuesta de la IA.", { responseText: text });
+            throw new Error("La IA devolvió una respuesta con un formato inesperado que no parece contener un objeto JSON.");
         }
+
+        jsonText = jsonText.substring(startIndex, endIndex + 1);
         
-        const parsedResponse: ProductResponse = JSON.parse(jsonText);
+        let parsedResponse: ProductResponse;
+        try {
+            parsedResponse = JSON.parse(jsonText);
+        } catch (parseError) {
+            console.error("Error al analizar el JSON extraído de la respuesta de la IA.", { jsonText, parseError });
+            throw new Error("La IA devolvió una respuesta que parecía ser JSON, pero estaba mal formada.");
+        }
 
         if (!parsedResponse.products || !Array.isArray(parsedResponse.products) || parsedResponse.products.length === 0) {
            throw new Error('La IA no devolvió productos en el formato esperado.');

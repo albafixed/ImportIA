@@ -1,21 +1,12 @@
 {
-  "name": "tu-asistente-de-importación-ia",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "asistente-importacion-ia",
+  "version": "1.0.0",
+  "description": "Analiza las últimas tendencias en Alibaba y descubre productos novedosos con alto potencial.",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@google/genai": "^1.11.0"
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vercel": "^34.2.0"
   }
 }

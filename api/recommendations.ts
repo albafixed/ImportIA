@@ -3,7 +3,10 @@ import { ProductResponse } from '../types';
 
 // Esta función será manejada por Vercel como una función serverless.
 export default async function handler(request: Request) {
+    console.log("Iniciando la función /api/recommendations...");
+
     if (request.method !== 'POST') {
+        console.log("Método no permitido:", request.method);
         return new Response(JSON.stringify({ message: 'Solo se permiten solicitudes POST' }), {
             status: 405,
             headers: { 'Content-Type': 'application/json', 'Allow': 'POST' },
@@ -11,7 +14,8 @@ export default async function handler(request: Request) {
     }
 
     if (!process.env.API_KEY) {
-        return new Response(JSON.stringify({ message: 'La variable de entorno API_KEY no fue encontrada.' }), {
+        console.error("Error: La variable de entorno API_KEY no fue encontrada.");
+        return new Response(JSON.stringify({ message: 'Error de configuración del servidor: la clave de API no está disponible.' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -19,8 +23,10 @@ export default async function handler(request: Request) {
 
     try {
         const { niche } = await request.json();
+        console.log("Nicho recibido:", niche);
 
         if (!niche || typeof niche !== 'string') {
+             console.error("Error: El campo 'niche' es inválido o no fue proporcionado.");
              return new Response(JSON.stringify({ message: 'El campo "niche" es requerido en el cuerpo de la solicitud.' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
@@ -63,6 +69,7 @@ Para cada producto, proporciona:
 - Exactamente 1 punto negativo o un riesgo a considerar (ej. alta competencia, material frágil) ("cons").
 - Una lista de 2 a 4 palabras clave de búsqueda específicas y técnicas para encontrar este producto en Alibaba. Deben ser términos que un comprador usaría para encontrar el artículo exacto, no términos genéricos ("alibabaSearchKeywords").`;
 
+        console.log("Realizando llamada a la API de Gemini...");
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -73,23 +80,28 @@ Para cada producto, proporciona:
             },
         });
 
+        console.log("Llamada a Gemini completada. Procesando respuesta...");
         const jsonText = response.text.trim();
+        console.log("Respuesta de texto crudo de la API:", jsonText);
+        
         const parsedResponse: ProductResponse = JSON.parse(jsonText);
 
         if (!parsedResponse.products || parsedResponse.products.length === 0) {
-           return new Response(JSON.stringify({ message: 'La API no devolvió productos. Inténtalo de nuevo.' }), {
+           console.error("Error: La API no devolvió productos en el formato esperado.");
+           return new Response(JSON.stringify({ message: 'La IA no devolvió productos válidos. Inténtalo de nuevo.' }), {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
-
+        
+        console.log("Respuesta enviada al cliente exitosamente.");
         return new Response(JSON.stringify(parsedResponse), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
 
     } catch (error) {
-        console.error("Error en la función serverless:", error);
+        console.error("Error catastrófico en la función serverless:", error);
          return new Response(JSON.stringify({ message: error instanceof Error ? error.message : "Ocurrió un error desconocido en el servidor." }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

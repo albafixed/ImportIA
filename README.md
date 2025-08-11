@@ -2,61 +2,29 @@
 
 Analiza las últimas tendencias en Alibaba y descubre productos novedosos con alto potencial. Selecciona un nicho para recibir recomendaciones de artículos económicos y fáciles de importar.
 
-## ¿Por qué la pantalla se ve solo azul?
+## Arquitectura Vercel
 
-La aplicación ha sido configurada para desplegarse en Vercel, utilizando funciones _serverless_ (en la carpeta `/api`) para proteger tu clave de API de Gemini. Esto significa que **no puedes simplemente abrir el archivo `index.html` en tu navegador** para que funcione.
+Esta aplicación utiliza una arquitectura moderna y segura, ideal para producción:
 
-Para que la aplicación se ejecute correctamente en tu máquina local, necesitas un entorno que simule el comportamiento de Vercel. La forma más sencilla de hacerlo es usando la propia Interfaz de Línea de Comandos (CLI) de Vercel.
+-   **Frontend:** Una aplicación de página única (SPA) construida con React y TypeScript, que se encarga de la interfaz de usuario.
+-   **Backend:** Una función *serverless* de Vercel (`/api/recommendations`) escrita en TypeScript. Esta función actúa como un proxy seguro que recibe las solicitudes del frontend.
 
-## Cómo ejecutar la aplicación localmente
+El frontend **nunca** tiene acceso directo a la clave de la API de Gemini. En su lugar, solicita recomendaciones a nuestra función *serverless*. Esta función, que se ejecuta en el entorno seguro de Vercel, es la única que tiene la clave de la API y está autorizada para comunicarse con Google.
 
-Sigue estos pasos para levantar un servidor de desarrollo local.
+Este enfoque protege tu clave de API de ser expuesta en el navegador.
 
-### Prerrequisitos
+## Despliegue en Vercel
 
-1.  **Node.js**: Asegúrate de tener Node.js instalado. Puedes descargarlo desde [nodejs.org](https://nodejs.org/).
-2.  **Vercel CLI**: Instala la CLI de Vercel globalmente en tu sistema ejecutando este comando en tu terminal:
-    ```bash
-    npm install -g vercel
-    ```
+Para desplegar esta aplicación, sigue estos pasos:
 
-### Configuración del Proyecto
+1.  **Crea un repositorio en GitHub/GitLab/Bitbucket** con el código de este proyecto.
+2.  **Crea un nuevo proyecto en Vercel:** Inicia sesión en tu cuenta de Vercel e importa el repositorio que acabas de crear.
+3.  **Configura las Variables de Entorno:**
+    -   En el panel de tu proyecto de Vercel, ve a **Settings > Environment Variables**.
+    -   Añade una nueva variable:
+        -   **Name:** `API_KEY`
+        -   **Value:** Pega tu clave de la API de Google Gemini aquí.
+    -   Asegúrate de que la variable esté disponible para todos los entornos (Producción, Vista Previa y Desarrollo).
+4.  **Despliega:** Vuelve al panel de despliegues y activa un nuevo despliegue. Vercel construirá automáticamente el frontend y la función *serverless*.
 
-1.  **Inicia sesión en Vercel**:
-    ```bash
-    vercel login
-    ```
-
-2.  **Vincula tu proyecto**: Desde la carpeta raíz de tu proyecto, ejecuta:
-    ```bash
-    vercel link
-    ```
-    Sigue las instrucciones para vincular tu directorio local a un nuevo proyecto en Vercel.
-
-3.  **Configura tu Clave de API**: Añade tu clave de API de Gemini como una variable de entorno en tu proyecto de Vercel. **Este es el paso más importante para que la IA funcione.**
-    ```bash
-    vercel env add API_KEY
-    ```
-    Cuando te lo pida, pega tu clave de API y presiona Enter. Asegúrate de aplicarla a los entornos de "Production", "Preview" y "Development".
-
-### Ejecutar el Servidor de Desarrollo
-
-1.  **Instala las dependencias**:
-    ```bash
-    npm install
-    ```
-
-2.  **Inicia el servidor**: Una vez que el proyecto esté vinculado y la clave de API configurada, ejecuta:
-    ```bash
-    npm run dev
-    ```
-
-3.  **¡Listo!** Vercel iniciará un servidor local (generalmente en `http://localhost:3000`). Abre esa dirección en tu navegador. Ahora la aplicación debería funcionar perfectamente, incluyendo las llamadas a la IA.
-
-## Despliegue en Producción
-
-Cuando estés listo para subir tu aplicación a la web, simplemente ejecuta:
-
-```bash
-npm run deploy
-```
+Una vez desplegada, la aplicación será accesible a través de la URL proporcionada por Vercel y utilizará de forma segura la clave de API que has configurado.

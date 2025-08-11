@@ -2,14 +2,11 @@
   "name": "asistente-importacion-ia",
   "version": "1.0.0",
   "description": "Analiza las últimas tendencias en Alibaba y descubre productos novedosos con alto potencial.",
-  "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
   "dependencies": {
     "@google/genai": "^1.11.0"
   },
   "devDependencies": {
-    "vercel": "^34.2.0"
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.12"
   }
 }

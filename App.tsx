@@ -39,7 +39,7 @@ function App(): React.ReactNode {
       setProducts(recommendedProducts);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido. Por favor, inténtalo de nuevo más tarde.');
+      setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al procesar tu solicitud.');
     } finally {
       setIsLoading(false);
     }

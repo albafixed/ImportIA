@@ -11,8 +11,8 @@ export async function fetchProductRecommendations(niche: string): Promise<Produc
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'No se pudo obtener una respuesta del servidor.' }));
-            throw new Error(errorData.message || 'Ocurrió un error en el servidor.');
+            const errorData = await response.json().catch(() => ({ message: `Error del servidor: ${response.status}` }));
+            throw new Error(errorData.message || 'No se pudo obtener una respuesta del servidor.');
         }
 
         const data: ProductResponse = await response.json();
@@ -24,10 +24,11 @@ export async function fetchProductRecommendations(niche: string): Promise<Produc
         return data.products;
 
     } catch (error) {
-        console.error("Error fetching recommendations from serverless function:", error);
+        console.error("Error al obtener recomendaciones desde la función serverless:", error);
         if (error instanceof Error) {
-            // Re-throw with a more generic user-facing message
-            throw new Error(`No se pudieron obtener las recomendaciones: ${error.message}`);
+            // Re-lanzar el error para que el componente de UI lo capture.
+            // El mensaje de error ya debería ser amigable para el usuario desde el servidor o desde la lógica de manejo de fetch.
+            throw new Error(error.message);
         }
         throw new Error("Ocurrió un error desconocido al contactar al servidor.");
     }

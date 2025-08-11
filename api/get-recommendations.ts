@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { ProductResponse } from '../types';
+import type { ProductResponse } from '../src/types';
 
 // Exporta la configuración de la función para Vercel
 export const config = {

@@ -1,10 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { ProductResponse, Product } from '../src/types';
+import type { Product, ProductResponse, EnrichedProductResponse } from '../src/types';
 
 // Exporta la configuración de la función para Vercel
 export const config = {
     runtime: 'edge',
-    maxDuration: 60, // Aumentamos la duración para dar tiempo a la generación de imágenes
+    maxDuration: 60, // Aumentado para permitir las múltiples llamadas
 };
 
 // Esta función es manejada por Vercel como una función serverless.
@@ -62,7 +62,7 @@ export default async function handler(request: Request) {
         
         const prompt = `Analiza oportunidades en el nicho de mercado: '${niche}'.`;
 
-        // Paso 1: Obtener las recomendaciones de productos
+        // Paso 1: Obtener las recomendaciones de productos (sin imagen)
         const textResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -89,30 +89,33 @@ export default async function handler(request: Request) {
            throw new Error('La IA no devolvió productos en el formato esperado.');
         }
 
-        // Paso 2: Generar imágenes para cada producto en paralelo
-        const productsWithImages = await Promise.all(
+        // Paso 2: Enriquecer cada producto con una URL de imagen en paralelo
+        const enrichedProducts = await Promise.all(
             parsedResponse.products.map(async (product) => {
-                const imagePrompt = `Fotografía de producto profesional y de alta calidad: '${product.productName}'. Estilo e-commerce, fondo blanco limpio y minimalista, bien iluminado.`;
-                const imageResponse = await ai.models.generateImages({
-                    model: 'imagen-3.0-generate-002',
-                    prompt: imagePrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: '1:1',
-                    },
-                });
+                try {
+                    const imageSearchPrompt = `Find a high-quality, generic e-commerce style image URL for a '${product.productName}'. The image should be suitable for a product listing. Return ONLY the direct image URL as plain text, and nothing else.`;
+                    const imageResponse = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: imageSearchPrompt,
+                        config: {
+                           tools: [{googleSearch: {}}],
+                           temperature: 0.1,
+                        }
+                    });
 
-                const imageBase64 = imageResponse.generatedImages[0].image.imageBytes;
-                
-                return {
-                    ...product,
-                    imageBase64,
-                };
+                    // Asignamos la URL o un placeholder si falla
+                    const imageUrl = imageResponse.text.trim().startsWith('http') ? imageResponse.text.trim() : 'https://via.placeholder.com/300x300.png?text=No+Image';
+                    return { ...product, imageUrl };
+
+                } catch (imgError) {
+                    console.error(`Error al buscar imagen para ${product.productName}:`, imgError);
+                    // Devolver el producto con una imagen de marcador de posición en caso de error
+                    return { ...product, imageUrl: 'https://via.placeholder.com/300x300.png?text=Error+Finding+Image' };
+                }
             })
         );
         
-        const finalResponse: { products: Product[] } = { products: productsWithImages };
+        const finalResponse: EnrichedProductResponse = { products: enrichedProducts };
 
         return new Response(JSON.stringify(finalResponse), {
             status: 200,

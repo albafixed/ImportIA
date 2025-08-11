@@ -1,6 +1,7 @@
+
 {
-  "name": "Tu Asistente de Importación IA",
-  "description": "Analiza las últimas tendencias en Alibaba y descubre productos novedosos con alto potencial. Selecciona un nicho para recibir recomendaciones de artículos económicos y fáciles de importar.",
+  "name": "Alibaba Edge AI",
+  "description": "Un asistente de IA futurista para analizar tendencias de mercado en Alibaba y descubrir productos con alto potencial de importación. Selecciona un nicho para obtener una ventaja competitiva.",
   "requestFramePermissions": [],
   "prompt": ""
 }

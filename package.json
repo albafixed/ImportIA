@@ -1,12 +1,16 @@
+
 {
-  "name": "asistente-importacion-ia",
+  "name": "alibaba-edge-ai",
   "version": "1.0.0",
-  "description": "Analiza las últimas tendencias en Alibaba y descubre productos novedosos con alto potencial.",
+  "description": "Un asistente de IA futurista para analizar tendencias de mercado en Alibaba y descubrir productos con alto potencial de importación.",
+  "private": true,
   "dependencies": {
-    "@google/genai": "^1.11.0"
+    "@google/genai": "^1.13.0"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
-    "@types/node": "^20.12.12"
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
   }
 }

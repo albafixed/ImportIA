@@ -1,10 +1,11 @@
+
 {
   "rewrites": [
     { "source": "/((?!api/|.*\\.).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/recommendations.ts": {
-      "maxDuration": 60
+    "api/get-recommendations.ts": {
+      "maxDuration": 45
     }
   }
 }

@@ -67,7 +67,13 @@ export default async function handler(request: Request) {
             },
         });
 
-        let jsonText = response.text.trim();
+        const text = response.text;
+        if (!text) {
+            console.error("La API de Gemini devolvió una respuesta vacía.", { response });
+            throw new Error('La IA no generó una respuesta de texto válida. Esto puede ocurrir si el contenido solicitado fue bloqueado por políticas de seguridad.');
+        }
+
+        let jsonText = text.trim();
         if (jsonText.startsWith('```json')) {
             jsonText = jsonText.substring(7, jsonText.length - 3).trim();
         }

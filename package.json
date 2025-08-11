@@ -6,6 +6,9 @@
     "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
+  "dependencies": {
+    "@google/genai": "^1.11.0"
+  },
   "devDependencies": {
     "vercel": "^34.2.0"
   }

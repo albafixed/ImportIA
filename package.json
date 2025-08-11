@@ -1,0 +1,8 @@
+{
+  "name": "tu-asistente-de-importacion-ia",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@google/genai": "^1.11.0"
+  }
+}

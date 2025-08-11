@@ -4,6 +4,7 @@ export interface Product {
   pros: string[];
   cons: string[];
   alibabaSearchKeywords: string[];
+  imageBase64: string; // Nuevo campo para la imagen generada por IA
 }
 
 export interface ProductResponse {

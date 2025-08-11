@@ -3,7 +3,6 @@ import { Product } from './types';
 import { fetchProductRecommendations } from './services/apiClient';
 
 import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
 import ControlPanel from './components/ControlPanel';
 import ProductDisplay from './components/ProductDisplay';
 
@@ -42,7 +41,6 @@ function App(): React.ReactNode {
           onRetry={handleSearch}
         />
       </main>
-      <Footer />
     </div>
   );
 }

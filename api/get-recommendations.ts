@@ -1,9 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { ProductResponse } from '../src/types';
+import type { ProductResponse, Product } from '../src/types';
 
 // Exporta la configuración de la función para Vercel
 export const config = {
     runtime: 'edge',
+    maxDuration: 60, // Aumentamos la duración para dar tiempo a la generación de imágenes
 };
 
 // Esta función es manejada por Vercel como una función serverless.
@@ -61,7 +62,8 @@ export default async function handler(request: Request) {
         
         const prompt = `Analiza oportunidades en el nicho de mercado: '${niche}'.`;
 
-        const response = await ai.models.generateContent({
+        // Paso 1: Obtener las recomendaciones de productos
+        const textResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
             config: {
@@ -72,34 +74,47 @@ export default async function handler(request: Request) {
             },
         });
 
-        let jsonText = response.text.trim();
+        let jsonText = textResponse.text.trim();
         if (jsonText.startsWith('```json')) {
-            jsonText = jsonText.substring(7);
-            if (jsonText.endsWith('```')) {
-                jsonText = jsonText.slice(0, -3);
-            }
+            jsonText = jsonText.substring(7, jsonText.length - 3).trim();
         }
-        jsonText = jsonText.trim();
         
         if (!jsonText) {
-            console.error("La API de Gemini devolvió una respuesta vacía.", { niche });
-            throw new Error('La IA no generó una respuesta. Inténtalo de nuevo.');
+            throw new Error('La IA no generó una respuesta de texto válida.');
         }
         
-        let parsedResponse: ProductResponse;
-        try {
-            parsedResponse = JSON.parse(jsonText);
-        } catch(e) {
-             console.error("Error al parsear JSON de la IA:", { originalText: response.text, cleanedText: jsonText, error: e });
-             throw new Error('La IA devolvió una respuesta con formato inesperado. No se pudo procesar.');
-        }
+        const parsedResponse: ProductResponse = JSON.parse(jsonText);
 
         if (!parsedResponse.products || !Array.isArray(parsedResponse.products) || parsedResponse.products.length === 0) {
-           console.error("El JSON parseado no contiene un array de productos válido.", { parsedResponse });
            throw new Error('La IA no devolvió productos en el formato esperado.');
         }
+
+        // Paso 2: Generar imágenes para cada producto en paralelo
+        const productsWithImages = await Promise.all(
+            parsedResponse.products.map(async (product) => {
+                const imagePrompt = `Fotografía de producto profesional y de alta calidad: '${product.productName}'. Estilo e-commerce, fondo blanco limpio y minimalista, bien iluminado.`;
+                const imageResponse = await ai.models.generateImages({
+                    model: 'imagen-3.0-generate-002',
+                    prompt: imagePrompt,
+                    config: {
+                        numberOfImages: 1,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: '1:1',
+                    },
+                });
+
+                const imageBase64 = imageResponse.generatedImages[0].image.imageBytes;
+                
+                return {
+                    ...product,
+                    imageBase64,
+                };
+            })
+        );
         
-        return new Response(JSON.stringify(parsedResponse), {
+        const finalResponse: { products: Product[] } = { products: productsWithImages };
+
+        return new Response(JSON.stringify(finalResponse), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
